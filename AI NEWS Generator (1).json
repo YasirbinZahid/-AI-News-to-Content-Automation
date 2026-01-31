@@ -1,0 +1,559 @@
+{
+  "name": "AI NEWS Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        176
+      ],
+      "id": "a94696a6-b5b3-4f95-a530-4f45d4af752e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.technologyreview.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -16
+      ],
+      "id": "7a60da88-6ad5-44ff-9c74-7ae50c0202d4",
+      "name": "RSS – Google AI"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.technologyreview.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        176
+      ],
+      "id": "59ab9548-dcf3-48d4-9e00-e5777da21573",
+      "name": "RSS – MIT Technology Review"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.artificialintelligence-news.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        368
+      ],
+      "id": "14960c9f-becb-4a44-8ee0-7671b13f2e09",
+      "name": "RSS Node 3 – AI News"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        160,
+        160
+      ],
+      "id": "c01b3b32-31c2-4dd2-b78d-da4d8d0aad41",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "af42473c-045f-43ad-911e-12e8f9533543",
+              "name": "news_list",
+              "value": "={{$json.title}} — {{$json.link}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        176
+      ],
+      "id": "27bae15b-efeb-4e44-84b8-3f59b500f52e",
+      "name": "Set Node to Clean the Output of Merge Node"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "news_list"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        608,
+        176
+      ],
+      "id": "c126fc7a-fdde-4244-b161-b9be8054004b",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e1694b7-a99f-4104-aa13-0cd2bddc43ad",
+              "name": "news_list",
+              "value": "={{ $json.news_list.join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        176
+      ],
+      "id": "ffcef03e-593b-47c8-a77b-7dfdcafe12d1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a senior AI content strategist.\nYour task is to select one high-impact AI news topic suitable for LinkedIn professionals.\n"
+            },
+            {
+              "content": "=Here is a list of the latest AI news:\n\n{{ $json.news_list }}\n\nSelect ONLY ONE topic that:\n- Is most relevant today\n- Has strong professional LinkedIn engagement potential\n- Is clearly related to AI or automation\n\nReturn exactly in this format:\nTopic Title:\nWhy this topic matters:\nSource Link:\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1056,
+        176
+      ],
+      "id": "01fcfffc-f011-4896-8089-bd48a6ba5efb",
+      "name": "Shortlist the topic",
+      "credentials": {
+        "openAiApi": {
+          "id": "lJL5nQJtnajS95Rk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a professional LinkedIn content writer.\nYou write concise, insightful posts for business and technology professionals.\n"
+            },
+            {
+              "content": "=Using the topic below, write a LinkedIn post.\n\nTopic:\n{{ $json.output[0].content[0].text }}\n\nRequirements:\n- Start with a strong hook in the first 2 lines\n- 3 to 4 short paragraphs\n- Clear insight or takeaway\n- Professional, conversational tone\n- End with a soft question or call to action\n- Add 4 to 5 relevant hashtags\n- Avoid emojis and marketing buzzwords\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        416
+      ],
+      "id": "ca01c828-6507-4676-9e73-38d0a9dd21e2",
+      "name": "LinkedIn Post",
+      "credentials": {
+        "openAiApi": {
+          "id": "lJL5nQJtnajS95Rk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.candidates[0].content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        384
+      ],
+      "id": "4606b1b7-302a-40ae-98b9-c8862299616b",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "lJL5nQJtnajS95Rk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        848,
+        640
+      ],
+      "id": "566573f4-e8b6-4139-b8b8-591f3659a1b5",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b75223e7-2c9b-4006-aaf9-7b61dee33fab",
+              "leftValue": "={{ !!$binary?.data }}",
+              "rightValue": "=\n",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1056,
+        640
+      ],
+      "id": "e166fde0-c0ec-4a82-a2c6-ee5926735ee3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "948726251665079",
+        "recipientPhoneNumber": "+923325450741",
+        "messageType": "image",
+        "mediaPath": "useMediaId",
+        "mediaId": "={{ $json.id }}",
+        "additionalFields": {
+          "mediaCaption": "={{ $('LinkedIn Post').item.json.output[0].content[0].text }}"
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1552,
+        560
+      ],
+      "id": "57fc6208-a130-4e55-8edf-9f3340bfb9e6",
+      "name": "Final Output",
+      "webhookId": "0c0d1729-584e-4726-b314-c140418fd962",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tKD1fkuAN1CpKHNm",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "948726251665079",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        560
+      ],
+      "id": "1588e5d6-7436-4deb-b2ef-e5fdde3f8d69",
+      "name": "Get Image id and upload it on whatsapp",
+      "webhookId": "8e0e5e09-64bc-4660-99d6-3dcf8cf5d584",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tKD1fkuAN1CpKHNm",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": " application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Create a detailed image prompt for a professional LinkedIn post.\\n\\nPost content:\\n{{ $json.output[0].content[0].text }}\\n\\nImage requirements:\\n- AI-augmented workplace\\n- Professional, corporate style\\n- Modern, clean visuals\\n- No text on image\\n- Suitable for LinkedIn feed\\n\\nReturn ONLY the image prompt.\"\n        }\n      ]\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        384
+      ],
+      "id": "e0904fc7-b6b6-4f1c-913b-170fb58da388",
+      "name": "Prompt generation"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS – Google AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS – MIT Technology Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Node 3 – AI News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Node 3 – AI News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "RSS – MIT Technology Review": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RSS – Google AI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Set Node to Clean the Output of Merge Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Node to Clean the Output of Merge Node": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Shortlist the topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shortlist the topic": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Prompt generation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Image id and upload it on whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image id and upload it on whatsapp": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt generation": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "3ab3e4fa-32da-4726-9bbf-7635d7770ede",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "23116bd6a2c19d7c9a6cf3ea6604bebcb89e7ad79f670ebe7e72df7302de8268"
+  },
+  "id": "7wl1kdq2q2dwa5hBJz3Tc",
+  "tags": []
+}
