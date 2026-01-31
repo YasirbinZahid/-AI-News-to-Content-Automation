@@ -5,3 +5,6 @@ Note:- (I encountered an issue while attempting to link the video directly withi
 
 # -AI-News-to-Content-Automation
 This project is a fully automated AI content pipeline.  It continuously monitors trusted AI news sources, selects the most relevant story, generates optimized LinkedIn content, creates a matching visual, and delivers the final output automatically.”
+
+**#-Decription**
+AI News to Content Automation is an end-to-end automated pipeline that transforms real-time AI news into ready-to-publish LinkedIn content. The system continuously monitors trusted AI news sources, intelligently selects the most relevant story, generates SEO-optimized post copy, creates a context-aligned visual, and delivers the final output automatically. Built with a modular and scalable architecture, this workflow eliminates manual research, writing, and design, enabling consistent, high-quality content generation with zero human intervention.
